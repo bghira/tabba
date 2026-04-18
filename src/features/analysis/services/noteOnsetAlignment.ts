@@ -1,0 +1,164 @@
+import type { DetectedNote } from "../types";
+
+interface NoteOnsetAlignmentOptions {
+  hopSize?: number;
+  maxLookaheadSeconds?: number;
+  maxLookbackSeconds?: number;
+  minDurationSeconds?: number;
+  minNoteSeparationSeconds?: number;
+  onsetRiseRatio?: number;
+  rmsThreshold?: number;
+  windowSize?: number;
+}
+
+interface EnergyOnset {
+  rms: number;
+  seconds: number;
+}
+
+const defaultOptions = {
+  hopSize: 128,
+  maxLookaheadSeconds: 0.12,
+  maxLookbackSeconds: 0.3,
+  minDurationSeconds: 0.05,
+  minNoteSeparationSeconds: 0.05,
+  onsetRiseRatio: 1.35,
+  rmsThreshold: 0.012,
+  windowSize: 512,
+};
+
+export function alignNotesToEnergyOnsets(
+  notes: DetectedNote[],
+  samples: Float32Array,
+  sampleRate: number,
+  options: NoteOnsetAlignmentOptions = {}
+): DetectedNote[] {
+  const settings = { ...defaultOptions, ...options };
+  const onsets = detectEnergyOnsets(samples, sampleRate, settings);
+  let previousStartSeconds = -Infinity;
+
+  return [...notes].sort((left, right) => left.startSeconds - right.startSeconds).map((note) => {
+    const onset = findNearestAvailableOnset(
+      note.startSeconds,
+      onsets,
+      previousStartSeconds,
+      settings
+    );
+
+    if (
+      !onset ||
+      onset.seconds < previousStartSeconds + settings.minNoteSeparationSeconds
+    ) {
+      previousStartSeconds = note.startSeconds;
+      return note;
+    }
+
+    const noteEndSeconds = note.startSeconds + note.durationSeconds;
+    const alignedNote = {
+      ...note,
+      durationSeconds: Math.max(settings.minDurationSeconds, noteEndSeconds - onset.seconds),
+      startSeconds: onset.seconds,
+    };
+
+    previousStartSeconds = alignedNote.startSeconds;
+    return alignedNote;
+  });
+}
+
+function detectEnergyOnsets(
+  samples: Float32Array,
+  sampleRate: number,
+  settings: Required<NoteOnsetAlignmentOptions>
+): EnergyOnset[] {
+  const onsets: EnergyOnset[] = [];
+  let previousRms = 0;
+  let lastOnsetSeconds = -Infinity;
+
+  for (let start = 0; start + settings.windowSize <= samples.length; start += settings.hopSize) {
+    const frame = samples.subarray(start, start + settings.windowSize);
+    const currentRms = calculateRms(frame);
+    const seconds =
+      previousRms < settings.rmsThreshold
+        ? findFirstActiveSample(samples, start, start + settings.windowSize, settings) / sampleRate
+        : start / sampleRate;
+
+    if (
+      currentRms >= settings.rmsThreshold &&
+      isEnergyRise(currentRms, previousRms, settings) &&
+      seconds >= lastOnsetSeconds + settings.minNoteSeparationSeconds
+    ) {
+      onsets.push({ rms: currentRms, seconds });
+      lastOnsetSeconds = seconds;
+    }
+
+    previousRms = currentRms;
+  }
+
+  return onsets;
+}
+
+function findNearestAvailableOnset(
+  startSeconds: number,
+  onsets: EnergyOnset[],
+  previousStartSeconds: number,
+  settings: Required<NoteOnsetAlignmentOptions>
+): EnergyOnset | undefined {
+  const minSeconds = Math.max(
+    previousStartSeconds + settings.minNoteSeparationSeconds,
+    startSeconds - settings.maxLookbackSeconds
+  );
+  const maxSeconds = startSeconds + settings.maxLookaheadSeconds;
+
+  const candidates = onsets.filter(
+    (onset) => onset.seconds >= minSeconds && onset.seconds <= maxSeconds
+  );
+
+  // Prefer onsets at or before the pitch-detected start — these are attack
+  // transients that pitch analysis missed due to frame-size latency.
+  // Among earlier onsets, pick the closest one (latest before pitch start).
+  const earlierOnsets = candidates.filter((onset) => onset.seconds <= startSeconds);
+
+  if (earlierOnsets.length > 0) {
+    return earlierOnsets.sort((left, right) => right.seconds - left.seconds)[0];
+  }
+
+  // Fall back to nearest lookahead onset when no earlier onset exists.
+  return candidates.sort((left, right) => left.seconds - right.seconds)[0];
+}
+
+function isEnergyRise(
+  currentRms: number,
+  previousRms: number,
+  settings: Required<NoteOnsetAlignmentOptions>
+): boolean {
+  if (previousRms < settings.rmsThreshold) {
+    return true;
+  }
+
+  return currentRms / previousRms >= settings.onsetRiseRatio;
+}
+
+function findFirstActiveSample(
+  samples: Float32Array,
+  start: number,
+  end: number,
+  settings: Required<NoteOnsetAlignmentOptions>
+): number {
+  for (let index = start; index < Math.min(end, samples.length); index += 1) {
+    if (Math.abs(samples[index]) >= settings.rmsThreshold) {
+      return index;
+    }
+  }
+
+  return start;
+}
+
+function calculateRms(samples: Float32Array): number {
+  if (samples.length === 0) {
+    return 0;
+  }
+
+  const energy = samples.reduce((sum, sample) => sum + sample * sample, 0);
+
+  return Math.sqrt(energy / samples.length);
+}

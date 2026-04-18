@@ -1,0 +1,27 @@
+import type { InstrumentTuning } from "./types";
+
+export const standardGuitarTuning: InstrumentTuning = {
+  id: "guitar-standard",
+  name: "Standard guitar",
+  instrument: "guitar",
+  strings: [
+    { stringNumber: 1, openPitch: "E4" },
+    { stringNumber: 2, openPitch: "B3" },
+    { stringNumber: 3, openPitch: "G3" },
+    { stringNumber: 4, openPitch: "D3" },
+    { stringNumber: 5, openPitch: "A2" },
+    { stringNumber: 6, openPitch: "E2" },
+  ],
+};
+
+export const standardBassTuning: InstrumentTuning = {
+  id: "bass-standard",
+  name: "Standard bass",
+  instrument: "bass",
+  strings: [
+    { stringNumber: 1, openPitch: "G2" },
+    { stringNumber: 2, openPitch: "D2" },
+    { stringNumber: 3, openPitch: "A1" },
+    { stringNumber: 4, openPitch: "E1" },
+  ],
+};

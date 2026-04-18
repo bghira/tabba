@@ -1,0 +1,137 @@
+import { describe, expect, it } from "vitest";
+import type { TabEvent } from "../../../domain/tab/types";
+import {
+  createTabGridCells,
+  getTabEventsForString,
+  getTabGridCellOffsetPercent,
+  getTabGridCellStartSeconds,
+  getTabGridColumnCount,
+  getTabGridColumnIndex,
+  MAX_TAB_GRID_COLUMNS,
+  MIN_TAB_GRID_COLUMNS,
+} from "./tabGridLayout";
+
+describe("tabGridLayout", () => {
+  it("chooses a bounded column count from the duration", () => {
+    expect(getTabGridColumnCount(4)).toBe(MIN_TAB_GRID_COLUMNS);
+    expect(getTabGridColumnCount(60)).toBe(480);
+    expect(getTabGridColumnCount(600)).toBe(MAX_TAB_GRID_COLUMNS);
+  });
+
+  it("creates cells with start and end times", () => {
+    expect(createTabGridCells(8, 4)).toEqual([
+      { columnIndex: 0, startSeconds: 0, endSeconds: 2 },
+      { columnIndex: 1, startSeconds: 2, endSeconds: 4 },
+      { columnIndex: 2, startSeconds: 4, endSeconds: 6 },
+      { columnIndex: 3, startSeconds: 6, endSeconds: 8 },
+    ]);
+  });
+
+  it("converts a cell index back into a start time", () => {
+    expect(getTabGridCellStartSeconds(2, 8, 4)).toBe(4);
+    expect(getTabGridCellStartSeconds(-1, 8, 4)).toBe(0);
+    expect(getTabGridCellStartSeconds(10, 8, 4)).toBe(8);
+  });
+
+  it("maps time into clamped zero-based cell indexes", () => {
+    expect(getTabGridColumnIndex(0, 8, 4)).toBe(0);
+    expect(getTabGridColumnIndex(1.99, 8, 4)).toBe(0);
+    expect(getTabGridColumnIndex(2, 8, 4)).toBe(1);
+    expect(getTabGridColumnIndex(8, 8, 4)).toBe(3);
+    expect(getTabGridColumnIndex(-1, 8, 4)).toBe(0);
+    expect(getTabGridColumnIndex(12, 8, 4)).toBe(3);
+    expect(getTabGridColumnIndex(2, 0, 4)).toBe(0);
+  });
+
+  it("maps time into a sub-cell offset", () => {
+    expect(getTabGridCellOffsetPercent(1, 8, 4)).toBe(50);
+    expect(getTabGridCellOffsetPercent(1.5, 8, 4)).toBe(75);
+    expect(getTabGridCellOffsetPercent(-1, 8, 4)).toBe(0);
+    expect(getTabGridCellOffsetPercent(8, 8, 4)).toBe(99);
+    expect(getTabGridCellOffsetPercent(1, 0, 4)).toBe(0);
+  });
+
+  it("rejects invalid cell and column settings", () => {
+    expect(() => getTabGridColumnCount(4, 0)).toThrow(
+      "Tab grid cell seconds must be greater than zero."
+    );
+    expect(() => createTabGridCells(4, 0)).toThrow(
+      "Tab grid column count must be a positive integer."
+    );
+    expect(() => getTabGridColumnIndex(1, 4, 1.5)).toThrow(
+      "Tab grid column count must be a positive integer."
+    );
+  });
+
+  it("positions tab events by string and grid cell", () => {
+    const events: TabEvent[] = [
+      createEvent("event-1", 1, 4, 2),
+      createEvent("event-2", 3, 5, 7),
+      createEvent("event-3", 7, 4, 5),
+    ];
+
+    expect(getTabEventsForString(events, 4, 8, 4)).toEqual([
+      {
+        cellOffsetPercent: 50,
+        columnIndex: 0,
+        event: events[0],
+        position: { stringNumber: 4, fret: 2, pitch: "E3" },
+      },
+      {
+        cellOffsetPercent: 50,
+        columnIndex: 3,
+        event: events[2],
+        position: { stringNumber: 4, fret: 5, pitch: "G3" },
+      },
+    ]);
+  });
+
+  it("keeps rapid bass notes in separate timeline cells", () => {
+    const events: TabEvent[] = [
+      createEvent("event-1", 1, 3, 1),
+      createEvent("event-2", 1.15, 3, 2),
+      createEvent("event-3", 1.31, 3, 3),
+    ];
+    const columnCount = getTabGridColumnCount(8);
+
+    expect(
+      getTabEventsForString(events, 3, 8, columnCount).map((event) => event.columnIndex)
+    ).toEqual([8, 9, 10]);
+  });
+
+  it("preserves calibration shifts inside a grid cell", () => {
+    const events: TabEvent[] = [
+      createEvent("event-1", 1.025, 3, 1),
+    ];
+    const [event] = getTabEventsForString(events, 3, 8, getTabGridColumnCount(8));
+
+    expect(event.columnIndex).toBe(8);
+    expect(event.cellOffsetPercent).toBeCloseTo(20);
+  });
+});
+
+function createEvent(
+  id: string,
+  startSeconds: number,
+  stringNumber: number,
+  fret: number
+): TabEvent {
+  return {
+    id,
+    startSeconds,
+    durationSeconds: 0.5,
+    kind: "single",
+    texture: "mono",
+    detectedPitches: [],
+    chosenPositions: [
+      {
+        stringNumber,
+        fret,
+        pitch: stringNumber === 4 ? (fret === 2 ? "E3" : "G3") : "A3",
+      },
+    ],
+    candidates: [],
+    confidence: 1,
+    locked: true,
+  };
+}

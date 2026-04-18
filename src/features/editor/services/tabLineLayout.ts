@@ -1,0 +1,85 @@
+import type { TabEvent } from "../../../domain/tab/types";
+
+export const DEFAULT_TAB_LINE_SECONDS = 8;
+export const MIN_TAB_LINE_SECONDS = 1;
+
+export interface TabLine {
+  lineIndex: number;
+  startSeconds: number;
+  endSeconds: number;
+  durationSeconds: number;
+}
+
+export function createTabLines(
+  totalDurationSeconds: number,
+  lineDurationSeconds: number = DEFAULT_TAB_LINE_SECONDS
+): TabLine[] {
+  if (lineDurationSeconds < MIN_TAB_LINE_SECONDS) {
+    throw new Error(
+      `Tab line duration must be at least ${MIN_TAB_LINE_SECONDS} second.`
+    );
+  }
+
+  const safeTotal = Math.max(0, totalDurationSeconds);
+
+  if (safeTotal === 0) {
+    return [
+      {
+        lineIndex: 0,
+        startSeconds: 0,
+        endSeconds: lineDurationSeconds,
+        durationSeconds: lineDurationSeconds,
+      },
+    ];
+  }
+
+  const lineCount = Math.max(1, Math.ceil(safeTotal / lineDurationSeconds));
+
+  return Array.from({ length: lineCount }, (_, lineIndex) => {
+    const startSeconds = lineIndex * lineDurationSeconds;
+    const endSeconds = Math.min(safeTotal, startSeconds + lineDurationSeconds);
+
+    return {
+      lineIndex,
+      startSeconds,
+      endSeconds,
+      durationSeconds: Math.max(MIN_TAB_LINE_SECONDS, endSeconds - startSeconds),
+    };
+  });
+}
+
+export function getActiveLineIndex(currentTime: number, lines: TabLine[]): number {
+  if (lines.length === 0) {
+    return -1;
+  }
+
+  const safeTime = Math.max(0, currentTime);
+
+  for (const line of lines) {
+    if (safeTime >= line.startSeconds && safeTime < line.endSeconds) {
+      return line.lineIndex;
+    }
+  }
+
+  return lines[lines.length - 1].lineIndex;
+}
+
+export function getEventsForLine(events: TabEvent[], line: TabLine): TabEvent[] {
+  return events.filter(
+    (event) => event.startSeconds >= line.startSeconds && event.startSeconds < line.endSeconds
+  );
+}
+
+export function getLineRelativePercent(
+  timeSeconds: number,
+  line: TabLine
+): number {
+  if (line.durationSeconds <= 0) {
+    return 0;
+  }
+
+  const offset = timeSeconds - line.startSeconds;
+  const ratio = offset / line.durationSeconds;
+
+  return Math.min(100, Math.max(0, ratio * 100));
+}

@@ -1,0 +1,85 @@
+.transport {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 20px;
+  border-block-end: 1px solid #263238;
+  background: #15191d;
+  color: #ffffff;
+}
+
+.identity {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.identity p,
+.identity h1 {
+  margin: 0;
+}
+
+.identity p {
+  color: #8ea0a9;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.identity h1 {
+  overflow: hidden;
+  font-size: 1.08rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controls {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid #2b343a;
+  border-radius: 8px;
+  background: #20262b;
+}
+
+.controls button {
+  display: grid;
+  width: 40px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #2f716c;
+  cursor: pointer;
+}
+
+.controls button:hover:not(:disabled) {
+  background: #3e8b84;
+}
+
+.controls button:disabled {
+  color: #6f7d84;
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.timeReadout {
+  min-width: 84px;
+  color: #f1c27d;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.95rem;
+  text-align: end;
+}
+
+@media (max-width: 640px) {
+  .transport {
+    grid-template-columns: 1fr;
+  }
+
+  .timeReadout {
+    text-align: start;
+  }
+}

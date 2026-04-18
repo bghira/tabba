@@ -1,0 +1,120 @@
+.stemLane {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  height: 100%;
+  padding: 18px 16px;
+  background: #ffffff;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header div {
+  display: grid;
+  gap: 2px;
+}
+
+.header h2,
+.header span {
+  margin: 0;
+}
+
+.header h2 {
+  color: #1f2930;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.header span {
+  color: #748088;
+  font-size: 0.78rem;
+}
+
+.importButton {
+  display: grid;
+  min-width: 78px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #2f716c;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #2f716c;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.emptyState {
+  display: grid;
+  min-height: 84px;
+  place-items: center;
+  border: 1px dashed #c9d1d4;
+  border-radius: 8px;
+  color: #748088;
+  background: #f8faf9;
+}
+
+.stemList {
+  display: grid;
+  gap: 8px;
+}
+
+.stemButton,
+.activeStem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  padding: 10px 12px;
+  border: 1px solid #dce1df;
+  border-radius: 8px;
+  color: #1f2930;
+  background: #f8faf9;
+  cursor: pointer;
+  text-align: start;
+}
+
+.activeStem {
+  border-color: #2f716c;
+  background: #e8f4f2;
+  box-shadow: inset 3px 0 0 #2f716c;
+}
+
+.stemButton span,
+.activeStem span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stemButton small,
+.activeStem small {
+  color: #748088;
+  font-size: 0.75rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #d8c087;
+  border-radius: 8px;
+  color: #4f4122;
+  background: #fff7df;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
