@@ -4,6 +4,11 @@ import type { SelectedTabEvent } from "../features/editor/types";
 import { useAnalyzeTrack } from "../features/analysis/hooks/useAnalyzeTrack";
 import { EditorWorkspace } from "../features/editor/components/EditorWorkspace";
 import { useRuntimeStemSources } from "../features/audio/hooks/useRuntimeStemSources";
+import {
+  toggleStemMute,
+  toggleStemSolo,
+  type StemMix,
+} from "../features/audio/services/stemMixState";
 import { createProject } from "../features/project/services/createProject";
 import { createProjectFileName } from "../features/project/services/createProjectFileName";
 import { createManualTabEvent } from "../features/project/services/createManualTabEvent";
@@ -30,6 +35,15 @@ export function App() {
   const [activeStemId, setActiveStemId] = useState<string | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<SelectedTabEvent | undefined>();
   const [projectNotice, setProjectNotice] = useState<string | undefined>();
+  const [mixStates, setMixStates] = useState<Record<string, StemMix>>({});
+
+  const handleToggleStemMute = useCallback((stemId: string) => {
+    setMixStates((current) => toggleStemMute(current, stemId));
+  }, []);
+
+  const handleToggleStemSolo = useCallback((stemId: string) => {
+    setMixStates((current) => toggleStemSolo(current, stemId));
+  }, []);
 
   const handleStemsCreated = useCallback((stems: Stem[]) => {
     const updatedAt = new Date();
@@ -163,6 +177,7 @@ export function App() {
           setProject(importedProject);
           setActiveStemId(importedProject.stems[0]?.id);
           setSelectedEvent(undefined);
+          setMixStates({});
           setProjectNotice("Project imported. Audio files need to be reimported for playback.");
         })
         .catch((error: unknown) => {
@@ -177,6 +192,7 @@ export function App() {
       <EditorWorkspace
         activeSource={activeSource}
         activeStemId={activeStemId}
+        mixStates={mixStates}
         onActiveStemChange={setActiveStemId}
         onAddManualEvent={handleAddManualEvent}
         onAnalyzeTrack={handleAnalyzeTrack}
@@ -188,10 +204,13 @@ export function App() {
         onSelectEvent={setSelectedEvent}
         onShiftSuggestions={handleShiftSuggestions}
         onStemDurationChange={handleStemDurationChange}
+        onToggleStemMute={handleToggleStemMute}
+        onToggleStemSolo={handleToggleStemSolo}
         onUpdateSelectedEvent={handleUpdateSelectedEvent}
         project={project}
         projectNotice={projectNotice}
         selectedEvent={selectedEvent}
+        sources={sources}
       />
     </main>
   );

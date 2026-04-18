@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 import type { InstrumentKind } from "../../../domain/instruments/types";
 import { StemLane } from "../../audio/components/StemLane";
-import { useAudioTransport } from "../../audio/hooks/useAudioTransport";
+import { useProjectTransport } from "../../audio/hooks/useProjectTransport";
 import { useDecodedWaveform } from "../../audio/hooks/useDecodedWaveform";
+import type { StemMix } from "../../audio/services/stemMixState";
 import type { RuntimeStemSource } from "../../audio/types";
 import type { TabbaProject } from "../../project/types";
 import { EventInspector } from "./EventInspector";
@@ -17,6 +18,7 @@ import { createDefaultLoopRegion, normalizePlaybackRate } from "../services/prac
 interface EditorWorkspaceProps {
   activeSource?: RuntimeStemSource;
   activeStemId?: string;
+  mixStates: Record<string, StemMix>;
   onActiveStemChange: (stemId: string) => void;
   onAddManualEvent: (
     trackId: string,
@@ -34,14 +36,18 @@ interface EditorWorkspaceProps {
   onUpdateSelectedEvent: (patch: EventInspectorPatch) => void;
   onImportFiles: (files: FileList | File[]) => void;
   onStemDurationChange: (stemId: string, duration: number) => void;
+  onToggleStemMute: (stemId: string) => void;
+  onToggleStemSolo: (stemId: string) => void;
   project: TabbaProject;
   projectNotice?: string;
   selectedEvent?: SelectedTabEvent;
+  sources: RuntimeStemSource[];
 }
 
 export function EditorWorkspace({
   activeSource,
   activeStemId,
+  mixStates,
   onActiveStemChange,
   onAddManualEvent,
   onAnalyzeTrack,
@@ -54,31 +60,38 @@ export function EditorWorkspace({
   onUpdateSelectedEvent,
   onImportFiles,
   onStemDurationChange,
+  onToggleStemMute,
+  onToggleStemSolo,
   project,
   projectNotice,
   selectedEvent,
+  sources,
 }: EditorWorkspaceProps) {
   const [loopRegion, setLoopRegion] = useState(() => createDefaultLoopRegion(60));
   const [playbackRate, setPlaybackRate] = useState(1);
-  const handleDurationChange = useCallback(
-    (duration: number) => {
-      if (activeStemId) {
-        onStemDurationChange(activeStemId, duration);
-      }
-    },
-    [activeStemId, onStemDurationChange]
-  );
-  const transport = useAudioTransport({
-    file: activeSource?.file,
+  const transport = useProjectTransport({
+    sources,
+    mixStates,
     loopRegion,
-    onDurationChange: handleDurationChange,
+    onStemDurationChange,
     playbackRate,
   });
   const waveform = useDecodedWaveform(activeSource?.file);
   const activeStem = project.stems.find((stem) => stem.id === activeStemId);
   const selectedTrack = project.tracks.find((track) => track.id === selectedEvent?.trackId);
   const selectedTabEvent = selectedTrack?.events.find((event) => event.id === selectedEvent?.eventId);
-  const timelineDuration = Math.max(activeStem?.durationSeconds ?? transport.duration, 60);
+  const longestStemDuration = project.stems.reduce(
+    (max, stem) => Math.max(max, stem.durationSeconds ?? 0),
+    0
+  );
+  const timelineDuration = Math.max(longestStemDuration, transport.duration, 60);
+
+  const handleImportFromTransport = useCallback(
+    (file: File) => {
+      onImportProject(file);
+    },
+    [onImportProject]
+  );
 
   return (
     <div className={styles.workspace}>
@@ -87,7 +100,7 @@ export function EditorWorkspace({
         hasSource={transport.hasSource}
         isPlaying={transport.isPlaying}
         onExportProject={onExportProject}
-        onImportProject={onImportProject}
+        onImportProject={handleImportFromTransport}
         onPause={transport.pause}
         onPlay={transport.play}
         onStop={transport.stop}
@@ -97,8 +110,11 @@ export function EditorWorkspace({
         <aside className={styles.sidebar}>
           <StemLane
             activeStemId={activeStemId}
+            mixStates={mixStates}
             onImportFiles={onImportFiles}
             onSelectStem={onActiveStemChange}
+            onToggleMute={onToggleStemMute}
+            onToggleSolo={onToggleStemSolo}
             projectNotice={projectNotice}
             stems={project.stems}
           />

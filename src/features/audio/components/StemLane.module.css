@@ -73,20 +73,17 @@
   gap: 8px;
 }
 
-.stemButton,
+.stemRow,
 .activeStem {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-height: 50px;
-  padding: 10px 12px;
+  padding: 6px 8px;
   border: 1px solid #dce1df;
   border-radius: 8px;
-  color: #1f2930;
   background: #f8faf9;
-  cursor: pointer;
-  text-align: start;
 }
 
 .activeStem {
@@ -95,17 +92,75 @@
   box-shadow: inset 3px 0 0 #2f716c;
 }
 
-.stemButton span,
-.activeStem span {
+.stemSelect {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  color: #1f2930;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+}
+
+.stemSelect:hover {
+  background: rgba(47, 113, 108, 0.08);
+}
+
+.stemName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stemButton small,
-.activeStem small {
+.stemSelect small {
   color: #748088;
   font-size: 0.75rem;
+}
+
+.mixControls {
+  display: flex;
+  gap: 4px;
+}
+
+.soloButton,
+.soloButtonActive,
+.muteButton,
+.muteButtonActive {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #ccd3d6;
+  border-radius: 6px;
+  color: #4b5961;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.soloButton:hover,
+.muteButton:hover {
+  background: #eef5f3;
+}
+
+.soloButtonActive {
+  border-color: #c98738;
+  color: #5b3b18;
+  background: #f1c27d;
+}
+
+.muteButtonActive {
+  border-color: #748088;
+  color: #ffffff;
+  background: #4b5961;
 }
 
 .notice {
