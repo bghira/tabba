@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import type { InstrumentKind } from "../../../domain/instruments/types";
 import type { TabTrack } from "../../project/types";
+import type { EventPopoverPatch } from "./EventPopover";
 import { ManualTrackStaff } from "./ManualTrackStaff";
+import { RawTabView } from "./RawTabView";
 import styles from "./TabStaffPanel.module.css";
 import { TrackCreationPanel } from "./TrackCreationPanel";
 import type { SelectedTabEvent } from "../types";
+
+type TabViewMode = "staff" | "raw";
 
 interface TabStaffPanelProps {
   activeStemId?: string;
@@ -17,9 +21,12 @@ interface TabStaffPanelProps {
     startSeconds: number
   ) => void;
   onAnalyzeTrack: (trackId: string) => void;
+  onClearSelectedEvent: () => void;
   onCreateTrack: (instrument: InstrumentKind) => void;
+  onDeleteSelectedEvent: () => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
+  onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
   selectedEvent?: SelectedTabEvent;
   tracks: TabTrack[];
 }
@@ -30,14 +37,18 @@ export function TabStaffPanel({
   duration,
   onAddNote,
   onAnalyzeTrack,
+  onClearSelectedEvent,
   onCreateTrack,
+  onDeleteSelectedEvent,
   onSelectEvent,
   onShiftSuggestions,
+  onUpdateSelectedEvent,
   selectedEvent,
   tracks,
 }: TabStaffPanelProps) {
   const [selectedFret, setSelectedFret] = useState(0);
   const [selectedTrackId, setSelectedTrackId] = useState<string | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<TabViewMode>("staff");
   const activeTracks = tracks.filter((track) => track.stemId === activeStemId);
   const selectedTrack =
     activeTracks.find((track) => track.id === selectedTrackId) ?? activeTracks[0];
@@ -67,7 +78,27 @@ export function TabStaffPanel({
           <h2>Tab Staff</h2>
           <span>{activeTracks.length} active tracks</span>
         </div>
-        {activeStemId && <TrackCreationPanel onCreateTrack={onCreateTrack} />}
+        <div className={styles.headerControls}>
+          <div className={styles.viewToggle} role="tablist" aria-label="Tab view mode">
+            <button
+              aria-pressed={viewMode === "staff"}
+              className={viewMode === "staff" ? styles.viewToggleActive : styles.viewToggleButton}
+              onClick={() => setViewMode("staff")}
+              type="button"
+            >
+              Staff
+            </button>
+            <button
+              aria-pressed={viewMode === "raw"}
+              className={viewMode === "raw" ? styles.viewToggleActive : styles.viewToggleButton}
+              onClick={() => setViewMode("raw")}
+              type="button"
+            >
+              Raw
+            </button>
+          </div>
+          {activeStemId && <TrackCreationPanel onCreateTrack={onCreateTrack} />}
+        </div>
       </div>
       <div className={styles.tools}>
         <label>
@@ -100,7 +131,7 @@ export function TabStaffPanel({
       {activeStemId && activeTracks.length === 0 && (
         <p className={styles.emptyState}>No tab tracks for selected stem.</p>
       )}
-      {selectedTrack && (
+      {selectedTrack && viewMode === "staff" && (
         <ManualTrackStaff
           key={selectedTrack.id}
           currentTime={currentTime}
@@ -109,11 +140,17 @@ export function TabStaffPanel({
             onAddNote(trackId, stringNumber, selectedFret, startSeconds)
           }
           onAnalyzeTrack={onAnalyzeTrack}
+          onClearSelectedEvent={onClearSelectedEvent}
+          onDeleteSelectedEvent={onDeleteSelectedEvent}
           onSelectEvent={onSelectEvent}
           onShiftSuggestions={onShiftSuggestions}
+          onUpdateSelectedEvent={onUpdateSelectedEvent}
           selectedEvent={selectedEvent}
           track={selectedTrack}
         />
+      )}
+      {selectedTrack && viewMode === "raw" && (
+        <RawTabView duration={duration} track={selectedTrack} />
       )}
     </section>
   );

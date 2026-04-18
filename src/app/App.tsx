@@ -24,7 +24,7 @@ import {
   shiftSuggestedEventsInTrack,
   updateManualEvent,
 } from "../features/project/services/updateProjectTracks";
-import type { EventInspectorPatch } from "../features/editor/components/EventInspector";
+import type { EventPopoverPatch } from "../features/editor/components/EventPopover";
 import type { Stem } from "../features/project/types";
 import styles from "./App.module.css";
 
@@ -127,7 +127,7 @@ export function App() {
   }, []);
 
   const handleUpdateSelectedEvent = useCallback(
-    (patch: EventInspectorPatch) => {
+    (patch: EventPopoverPatch) => {
       if (!selectedEvent) {
         return;
       }
@@ -144,6 +144,10 @@ export function App() {
     },
     [selectedEvent]
   );
+
+  const handleClearSelectedEvent = useCallback(() => {
+    setSelectedEvent(undefined);
+  }, []);
 
   const handleDeleteSelectedEvent = useCallback(() => {
     if (!selectedEvent) {
@@ -196,6 +200,7 @@ export function App() {
         onActiveStemChange={setActiveStemId}
         onAddManualEvent={handleAddManualEvent}
         onAnalyzeTrack={handleAnalyzeTrack}
+        onClearSelectedEvent={handleClearSelectedEvent}
         onCreateTrack={handleCreateTrack}
         onDeleteSelectedEvent={handleDeleteSelectedEvent}
         onExportProject={handleExportProject}

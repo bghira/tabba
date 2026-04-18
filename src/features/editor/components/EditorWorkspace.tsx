@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import type { InstrumentKind } from "../../../domain/instruments/types";
 import { StemLane } from "../../audio/components/StemLane";
 import { useProjectTransport } from "../../audio/hooks/useProjectTransport";
@@ -6,8 +6,7 @@ import { useDecodedWaveform } from "../../audio/hooks/useDecodedWaveform";
 import type { StemMix } from "../../audio/services/stemMixState";
 import type { RuntimeStemSource } from "../../audio/types";
 import type { TabbaProject } from "../../project/types";
-import { EventInspector } from "./EventInspector";
-import type { EventInspectorPatch } from "./EventInspector";
+import type { EventPopoverPatch } from "./EventPopover";
 import { TabStaffPanel } from "./TabStaffPanel";
 import { TimelinePanel } from "./TimelinePanel";
 import { TransportStrip } from "./TransportStrip";
@@ -27,13 +26,14 @@ interface EditorWorkspaceProps {
     startSeconds: number
   ) => void;
   onAnalyzeTrack: (trackId: string) => void;
+  onClearSelectedEvent: () => void;
   onCreateTrack: (instrument: InstrumentKind) => void;
   onDeleteSelectedEvent: () => void;
   onExportProject: () => void;
   onImportProject: (file: File) => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
-  onUpdateSelectedEvent: (patch: EventInspectorPatch) => void;
+  onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
   onImportFiles: (files: FileList | File[]) => void;
   onStemDurationChange: (stemId: string, duration: number) => void;
   onToggleStemMute: (stemId: string) => void;
@@ -51,6 +51,7 @@ export function EditorWorkspace({
   onActiveStemChange,
   onAddManualEvent,
   onAnalyzeTrack,
+  onClearSelectedEvent,
   onCreateTrack,
   onDeleteSelectedEvent,
   onExportProject,
@@ -77,21 +78,11 @@ export function EditorWorkspace({
     playbackRate,
   });
   const waveform = useDecodedWaveform(activeSource?.file);
-  const activeStem = project.stems.find((stem) => stem.id === activeStemId);
-  const selectedTrack = project.tracks.find((track) => track.id === selectedEvent?.trackId);
-  const selectedTabEvent = selectedTrack?.events.find((event) => event.id === selectedEvent?.eventId);
   const longestStemDuration = project.stems.reduce(
     (max, stem) => Math.max(max, stem.durationSeconds ?? 0),
     0
   );
   const timelineDuration = Math.max(longestStemDuration, transport.duration, 60);
-
-  const handleImportFromTransport = useCallback(
-    (file: File) => {
-      onImportProject(file);
-    },
-    [onImportProject]
-  );
 
   return (
     <div className={styles.workspace}>
@@ -100,7 +91,7 @@ export function EditorWorkspace({
         hasSource={transport.hasSource}
         isPlaying={transport.isPlaying}
         onExportProject={onExportProject}
-        onImportProject={handleImportFromTransport}
+        onImportProject={onImportProject}
         onPause={transport.pause}
         onPlay={transport.play}
         onStop={transport.stop}
@@ -140,21 +131,16 @@ export function EditorWorkspace({
               onAddManualEvent(trackId, stringNumber, fret, startSeconds)
             }
             onAnalyzeTrack={onAnalyzeTrack}
+            onClearSelectedEvent={onClearSelectedEvent}
             onCreateTrack={onCreateTrack}
+            onDeleteSelectedEvent={onDeleteSelectedEvent}
             onSelectEvent={onSelectEvent}
             onShiftSuggestions={onShiftSuggestions}
+            onUpdateSelectedEvent={onUpdateSelectedEvent}
             selectedEvent={selectedEvent}
             tracks={project.tracks}
           />
         </div>
-        <EventInspector
-          activeStemName={activeStem?.name}
-          onDeleteEvent={onDeleteSelectedEvent}
-          onUpdateEvent={onUpdateSelectedEvent}
-          selectedEvent={selectedTabEvent}
-          selectedTrack={selectedTrack}
-          trackCount={project.tracks.length}
-        />
       </div>
     </div>
   );

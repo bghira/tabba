@@ -9,6 +9,7 @@ import {
   type TabLine,
 } from "../services/tabLineLayout";
 import type { SelectedTabEvent } from "../types";
+import { EventPopover, type EventPopoverPatch } from "./EventPopover";
 import styles from "./ManualTrackStaff.module.css";
 
 interface ManualTrackStaffProps {
@@ -16,8 +17,11 @@ interface ManualTrackStaffProps {
   duration: number;
   onAddNote: (trackId: string, stringNumber: number, startSeconds: number) => void;
   onAnalyzeTrack: (trackId: string) => void;
+  onClearSelectedEvent: () => void;
+  onDeleteSelectedEvent: () => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
+  onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
   selectedEvent?: SelectedTabEvent;
   track: TabTrack;
 }
@@ -27,8 +31,11 @@ export function ManualTrackStaff({
   duration,
   onAddNote,
   onAnalyzeTrack,
+  onClearSelectedEvent,
+  onDeleteSelectedEvent,
   onSelectEvent,
   onShiftSuggestions,
+  onUpdateSelectedEvent,
   selectedEvent,
   track,
 }: ManualTrackStaffProps) {
@@ -36,6 +43,18 @@ export function ManualTrackStaff({
   const activeLineRef = useRef<HTMLDivElement | null>(null);
   const lines = createTabLines(duration);
   const activeLineIndex = getActiveLineIndex(currentTime, lines);
+
+  const selectedEventForTrack =
+    selectedEvent && selectedEvent.trackId === track.id
+      ? track.events.find((event) => event.id === selectedEvent.eventId)
+      : undefined;
+  const selectedLineIndex = selectedEventForTrack
+    ? lines.find(
+        (line) =>
+          selectedEventForTrack.startSeconds >= line.startSeconds &&
+          selectedEventForTrack.startSeconds < line.endSeconds
+      )?.lineIndex ?? lines[lines.length - 1]?.lineIndex
+    : undefined;
 
   useEffect(() => {
     const scroller = linesScrollerRef.current;
@@ -80,10 +99,18 @@ export function ManualTrackStaff({
           </button>
         </div>
       </div>
-      <div className={styles.linesScroller} ref={linesScrollerRef}>
+      <div
+        className={styles.linesScroller}
+        ref={linesScrollerRef}
+        onClick={() => onClearSelectedEvent()}
+      >
         {lines.map((line) => {
           const isActive = line.lineIndex === activeLineIndex;
           const lineEvents = getEventsForLine(track.events, line);
+          const popoverEvent =
+            selectedEventForTrack && selectedLineIndex === line.lineIndex
+              ? selectedEventForTrack
+              : undefined;
 
           return (
             <TabStaffLine
@@ -94,7 +121,11 @@ export function ManualTrackStaff({
               line={line}
               lineEvents={lineEvents}
               onAddNote={onAddNote}
+              onClearSelectedEvent={onClearSelectedEvent}
+              onDeleteSelectedEvent={onDeleteSelectedEvent}
               onSelectEvent={onSelectEvent}
+              onUpdateSelectedEvent={onUpdateSelectedEvent}
+              popoverEvent={popoverEvent}
               selectedEvent={selectedEvent}
               track={track}
             />
@@ -112,7 +143,11 @@ interface TabStaffLineProps {
   lineEvents: TabEvent[];
   lineRef?: React.Ref<HTMLDivElement>;
   onAddNote: (trackId: string, stringNumber: number, startSeconds: number) => void;
+  onClearSelectedEvent: () => void;
+  onDeleteSelectedEvent: () => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
+  onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
+  popoverEvent?: TabEvent;
   selectedEvent?: SelectedTabEvent;
   track: TabTrack;
 }
@@ -124,23 +159,32 @@ function TabStaffLine({
   lineEvents,
   lineRef,
   onAddNote,
+  onClearSelectedEvent,
+  onDeleteSelectedEvent,
   onSelectEvent,
+  onUpdateSelectedEvent,
+  popoverEvent,
   selectedEvent,
   track,
 }: TabStaffLineProps) {
   const playheadPercent = getLineRelativePercent(currentTime, line);
+  const popoverAnchorPercent = popoverEvent
+    ? getLineRelativePercent(popoverEvent.startSeconds, line)
+    : 50;
 
   return (
     <div
       className={isActive ? styles.tabLineActive : styles.tabLine}
       data-line-index={line.lineIndex}
+      onClick={(clickEvent) => clickEvent.stopPropagation()}
       ref={lineRef}
     >
       <div className={styles.lineMeta}>
         <span className={styles.lineTime}>{formatLineTime(line.startSeconds)}</span>
       </div>
       <div className={styles.staffRows}>
-        {track.tuning.strings.map((string) => {
+        {track.tuning.strings.map((string, stringIndex) => {
+          const isLastString = stringIndex === track.tuning.strings.length - 1;
           const eventsForString = lineEvents.filter((event) =>
             event.chosenPositions.some((position) => position.stringNumber === string.stringNumber)
           );
@@ -194,6 +238,16 @@ function TabStaffLine({
                     </button>
                   );
                 })}
+                {isLastString && popoverEvent && (
+                  <EventPopover
+                    anchorPercent={clampPopoverAnchor(popoverAnchorPercent)}
+                    event={popoverEvent}
+                    onClose={onClearSelectedEvent}
+                    onDelete={onDeleteSelectedEvent}
+                    onUpdate={onUpdateSelectedEvent}
+                    track={track}
+                  />
+                )}
               </div>
             </div>
           );
@@ -201,6 +255,10 @@ function TabStaffLine({
       </div>
     </div>
   );
+}
+
+function clampPopoverAnchor(percent: number): number {
+  return Math.min(96, Math.max(4, percent));
 }
 
 function formatLineTime(totalSeconds: number): string {

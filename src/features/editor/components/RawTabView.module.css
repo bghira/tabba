@@ -1,0 +1,64 @@
+.rawView {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #d9dddc;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header div {
+  display: grid;
+  gap: 3px;
+}
+
+.header h3 {
+  margin: 0;
+  color: #1f2930;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.header span {
+  color: #748088;
+  font-size: 0.8rem;
+}
+
+.copyButton {
+  min-width: 92px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #2f716c;
+  border-radius: 6px;
+  color: #ffffff;
+  background: #2f716c;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.copyButton:hover {
+  background: #3e8b84;
+}
+
+.tab {
+  margin: 0;
+  padding: 12px 14px;
+  max-height: 62vh;
+  overflow: auto;
+  border: 1px solid #e2e6e7;
+  border-radius: 6px;
+  background: #fbfcfb;
+  color: #1f2930;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre;
+}
