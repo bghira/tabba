@@ -102,29 +102,30 @@ export function TabStaffPanel({
               Raw
             </button>
             <button
+              aria-label="Guitar Hero view"
               aria-pressed={viewMode === "gh"}
               className={viewMode === "gh" ? styles.viewToggleActive : styles.viewToggleButton}
               onClick={() => setViewMode("gh")}
               type="button"
             >
-              GH
+              Guitar Hero
             </button>
           </div>
           {selectedTrack && (
             <div className={styles.exportButtons}>
               <button
+                aria-label="Export Clone Hero chart"
                 onClick={() => onExportCloneHero(selectedTrack.id)}
                 type="button"
-                title="Download Clone Hero .chart file for this track"
               >
-                .chart
+                Export .chart
               </button>
               <button
+                aria-label="Export Rocksmith XML"
                 onClick={() => onExportRocksmith(selectedTrack.id)}
                 type="button"
-                title="Download Rocksmith RS2014 XML for this track"
               >
-                .xml
+                Export .xml
               </button>
             </div>
           )}

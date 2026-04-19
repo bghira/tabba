@@ -11,6 +11,7 @@ import {
 } from "../features/audio/services/stemMixState";
 import { createProject } from "../features/project/services/createProject";
 import { createProjectFileName } from "../features/project/services/createProjectFileName";
+import { normalizeFileBaseName } from "../features/project/services/normalizeFileBaseName";
 import { createManualTabEvent } from "../features/project/services/createManualTabEvent";
 import { createTabTrack } from "../features/project/services/createTabTrack";
 import { downloadTextFile } from "../features/project/browser/downloadProjectFile";
@@ -180,7 +181,7 @@ export function App() {
         return;
       }
 
-      const fileName = `${track.name.replace(/\s+/g, "_").toLowerCase()}.chart`;
+      const fileName = `${normalizeFileBaseName(track.name, "tabba-track")}.chart`;
       downloadTextFile(fileName, trackToCloneHeroChart(track), "text/plain");
       setProjectNotice(`Exported ${fileName}.`);
     },
@@ -195,7 +196,7 @@ export function App() {
         return;
       }
 
-      const fileName = `${track.name.replace(/\s+/g, "_").toLowerCase()}.xml`;
+      const fileName = `${normalizeFileBaseName(track.name, "tabba-track")}.xml`;
       downloadTextFile(fileName, trackToRocksmithXml(track), "application/xml");
       setProjectNotice(`Exported ${fileName}.`);
     },

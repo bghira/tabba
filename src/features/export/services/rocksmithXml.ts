@@ -40,7 +40,7 @@ export function trackToRocksmithXml(
 
   const notes = track.events.flatMap((event) => renderNotes(event, track));
 
-  return [
+  const lines: (string | undefined)[] = [
     `<?xml version="1.0" encoding="utf-8"?>`,
     `<song version="7">`,
     `  <title>${escapeXml(metadata.title ?? track.name)}</title>`,
@@ -55,7 +55,7 @@ export function trackToRocksmithXml(
     `  <capo>${track.tuning.capoFret ?? 0}</capo>`,
     `  <artistName>${escapeXml(metadata.artistName ?? "Unknown")}</artistName>`,
     `  <albumName>${escapeXml(metadata.albumName ?? "Unknown")}</albumName>`,
-    `  <albumYear>${metadata.albumYear ?? new Date().getFullYear()}</albumYear>`,
+    metadata.albumYear !== undefined ? `  <albumYear>${metadata.albumYear}</albumYear>` : undefined,
     `  ${renderEbeats(beats)}`,
     `  <sections count="0"></sections>`,
     `  <events count="0"></events>`,
@@ -68,7 +68,9 @@ export function trackToRocksmithXml(
     `    </level>`,
     `  </levels>`,
     `</song>`,
-  ].join("\n");
+  ];
+
+  return lines.filter((line): line is string => line !== undefined).join("\n");
 }
 
 function computeDefaultDuration(track: TabTrack): number {
