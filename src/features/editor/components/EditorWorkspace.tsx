@@ -29,7 +29,9 @@ interface EditorWorkspaceProps {
   onClearSelectedEvent: () => void;
   onCreateTrack: (instrument: InstrumentKind) => void;
   onDeleteSelectedEvent: () => void;
+  onExportCloneHero: (trackId: string) => void;
   onExportProject: () => void;
+  onExportRocksmith: (trackId: string) => void;
   onImportProject: (file: File) => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
@@ -54,7 +56,9 @@ export function EditorWorkspace({
   onClearSelectedEvent,
   onCreateTrack,
   onDeleteSelectedEvent,
+  onExportCloneHero,
   onExportProject,
+  onExportRocksmith,
   onImportProject,
   onSelectEvent,
   onShiftSuggestions,
@@ -134,6 +138,8 @@ export function EditorWorkspace({
             onClearSelectedEvent={onClearSelectedEvent}
             onCreateTrack={onCreateTrack}
             onDeleteSelectedEvent={onDeleteSelectedEvent}
+            onExportCloneHero={onExportCloneHero}
+            onExportRocksmith={onExportRocksmith}
             onSelectEvent={onSelectEvent}
             onShiftSuggestions={onShiftSuggestions}
             onUpdateSelectedEvent={onUpdateSelectedEvent}

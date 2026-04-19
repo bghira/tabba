@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import type { InstrumentKind } from "../../../domain/instruments/types";
 import type { TabTrack } from "../../project/types";
 import type { EventPopoverPatch } from "./EventPopover";
+import { GuitarHeroView } from "./GuitarHeroView";
 import { ManualTrackStaff } from "./ManualTrackStaff";
 import { RawTabView } from "./RawTabView";
 import styles from "./TabStaffPanel.module.css";
 import { TrackCreationPanel } from "./TrackCreationPanel";
 import type { SelectedTabEvent } from "../types";
 
-type TabViewMode = "staff" | "raw";
+type TabViewMode = "staff" | "raw" | "gh";
 
 interface TabStaffPanelProps {
   activeStemId?: string;
@@ -24,6 +25,8 @@ interface TabStaffPanelProps {
   onClearSelectedEvent: () => void;
   onCreateTrack: (instrument: InstrumentKind) => void;
   onDeleteSelectedEvent: () => void;
+  onExportCloneHero: (trackId: string) => void;
+  onExportRocksmith: (trackId: string) => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
   onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
@@ -40,6 +43,8 @@ export function TabStaffPanel({
   onClearSelectedEvent,
   onCreateTrack,
   onDeleteSelectedEvent,
+  onExportCloneHero,
+  onExportRocksmith,
   onSelectEvent,
   onShiftSuggestions,
   onUpdateSelectedEvent,
@@ -96,7 +101,34 @@ export function TabStaffPanel({
             >
               Raw
             </button>
+            <button
+              aria-label="Guitar Hero view"
+              aria-pressed={viewMode === "gh"}
+              className={viewMode === "gh" ? styles.viewToggleActive : styles.viewToggleButton}
+              onClick={() => setViewMode("gh")}
+              type="button"
+            >
+              Guitar Hero
+            </button>
           </div>
+          {selectedTrack && (
+            <div className={styles.exportButtons}>
+              <button
+                aria-label="Export Clone Hero chart"
+                onClick={() => onExportCloneHero(selectedTrack.id)}
+                type="button"
+              >
+                Export .chart
+              </button>
+              <button
+                aria-label="Export Rocksmith XML"
+                onClick={() => onExportRocksmith(selectedTrack.id)}
+                type="button"
+              >
+                Export .xml
+              </button>
+            </div>
+          )}
           {activeStemId && <TrackCreationPanel onCreateTrack={onCreateTrack} />}
         </div>
       </div>
@@ -151,6 +183,9 @@ export function TabStaffPanel({
       )}
       {selectedTrack && viewMode === "raw" && (
         <RawTabView duration={duration} track={selectedTrack} />
+      )}
+      {selectedTrack && viewMode === "gh" && (
+        <GuitarHeroView currentTime={currentTime} track={selectedTrack} />
       )}
     </section>
   );

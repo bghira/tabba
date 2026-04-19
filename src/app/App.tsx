@@ -11,11 +11,14 @@ import {
 } from "../features/audio/services/stemMixState";
 import { createProject } from "../features/project/services/createProject";
 import { createProjectFileName } from "../features/project/services/createProjectFileName";
+import { normalizeFileBaseName } from "../features/project/services/normalizeFileBaseName";
 import { createManualTabEvent } from "../features/project/services/createManualTabEvent";
 import { createTabTrack } from "../features/project/services/createTabTrack";
 import { downloadTextFile } from "../features/project/browser/downloadProjectFile";
 import { importProjectJson } from "../features/project/services/importProjectJson";
 import { serializeProject } from "../features/project/services/serializeProject";
+import { trackToCloneHeroChart } from "../features/export/services/cloneHeroChart";
+import { trackToRocksmithXml } from "../features/export/services/rocksmithXml";
 import { addStemToProject, setStemDuration } from "../features/project/services/updateProjectStems";
 import {
   addEventToTrack,
@@ -170,6 +173,36 @@ export function App() {
     setProjectNotice("Project exported.");
   }, [project]);
 
+  const handleExportCloneHero = useCallback(
+    (trackId: string) => {
+      const track = project.tracks.find((candidate) => candidate.id === trackId);
+
+      if (!track) {
+        return;
+      }
+
+      const fileName = `${normalizeFileBaseName(track.name, "tabba-track")}.chart`;
+      downloadTextFile(fileName, trackToCloneHeroChart(track), "text/plain");
+      setProjectNotice(`Exported ${fileName}.`);
+    },
+    [project]
+  );
+
+  const handleExportRocksmith = useCallback(
+    (trackId: string) => {
+      const track = project.tracks.find((candidate) => candidate.id === trackId);
+
+      if (!track) {
+        return;
+      }
+
+      const fileName = `${normalizeFileBaseName(track.name, "tabba-track")}.xml`;
+      downloadTextFile(fileName, trackToRocksmithXml(track), "application/xml");
+      setProjectNotice(`Exported ${fileName}.`);
+    },
+    [project]
+  );
+
   const handleImportProject = useCallback(
     (file: File) => {
       file
@@ -203,7 +236,9 @@ export function App() {
         onClearSelectedEvent={handleClearSelectedEvent}
         onCreateTrack={handleCreateTrack}
         onDeleteSelectedEvent={handleDeleteSelectedEvent}
+        onExportCloneHero={handleExportCloneHero}
         onExportProject={handleExportProject}
+        onExportRocksmith={handleExportRocksmith}
         onImportProject={handleImportProject}
         onImportFiles={importFiles}
         onSelectEvent={setSelectedEvent}

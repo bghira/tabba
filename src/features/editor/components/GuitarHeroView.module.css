@@ -1,0 +1,128 @@
+.view {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4b5961;
+  font-size: 0.82rem;
+}
+
+.header strong {
+  color: #1f2930;
+}
+
+.board {
+  position: relative;
+  height: 70vh;
+  min-height: 420px;
+  border: 1px solid #d9dddc;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0d1418 0%, #14242b 100%);
+  overflow: hidden;
+}
+
+.lanes {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--lane-count, 5), 1fr);
+}
+
+.lane {
+  position: relative;
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lane:last-child {
+  border-inline-end: 0;
+}
+
+.laneLabel {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.strikeLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 85%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.note {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 22px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.noteChord {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.sustain {
+  position: absolute;
+  left: 45%;
+  right: 45%;
+  border-radius: 4px;
+  opacity: 0.75;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+  padding: 20px;
+  text-align: center;
+}
+
+.lane0 .note,
+.lane0 .sustain {
+  background: #35c45a;
+}
+
+.lane1 .note,
+.lane1 .sustain {
+  background: #d8454f;
+}
+
+.lane2 .note,
+.lane2 .sustain {
+  background: #f4c430;
+}
+
+.lane3 .note,
+.lane3 .sustain {
+  background: #3a8fd9;
+}
+
+.lane4 .note,
+.lane4 .sustain {
+  background: #ef8b2c;
+}
