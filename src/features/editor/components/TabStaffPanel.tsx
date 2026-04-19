@@ -25,6 +25,8 @@ interface TabStaffPanelProps {
   onClearSelectedEvent: () => void;
   onCreateTrack: (instrument: InstrumentKind) => void;
   onDeleteSelectedEvent: () => void;
+  onExportCloneHero: (trackId: string) => void;
+  onExportRocksmith: (trackId: string) => void;
   onSelectEvent: (selection: SelectedTabEvent) => void;
   onShiftSuggestions: (trackId: string, deltaSeconds: number) => void;
   onUpdateSelectedEvent: (patch: EventPopoverPatch) => void;
@@ -41,6 +43,8 @@ export function TabStaffPanel({
   onClearSelectedEvent,
   onCreateTrack,
   onDeleteSelectedEvent,
+  onExportCloneHero,
+  onExportRocksmith,
   onSelectEvent,
   onShiftSuggestions,
   onUpdateSelectedEvent,
@@ -106,6 +110,24 @@ export function TabStaffPanel({
               GH
             </button>
           </div>
+          {selectedTrack && (
+            <div className={styles.exportButtons}>
+              <button
+                onClick={() => onExportCloneHero(selectedTrack.id)}
+                type="button"
+                title="Download Clone Hero .chart file for this track"
+              >
+                .chart
+              </button>
+              <button
+                onClick={() => onExportRocksmith(selectedTrack.id)}
+                type="button"
+                title="Download Rocksmith RS2014 XML for this track"
+              >
+                .xml
+              </button>
+            </div>
+          )}
           {activeStemId && <TrackCreationPanel onCreateTrack={onCreateTrack} />}
         </div>
       </div>
