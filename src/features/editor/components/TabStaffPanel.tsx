@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import type { InstrumentKind } from "../../../domain/instruments/types";
 import type { TabTrack } from "../../project/types";
 import type { EventPopoverPatch } from "./EventPopover";
+import { GuitarHeroView } from "./GuitarHeroView";
 import { ManualTrackStaff } from "./ManualTrackStaff";
 import { RawTabView } from "./RawTabView";
 import styles from "./TabStaffPanel.module.css";
 import { TrackCreationPanel } from "./TrackCreationPanel";
 import type { SelectedTabEvent } from "../types";
 
-type TabViewMode = "staff" | "raw";
+type TabViewMode = "staff" | "raw" | "gh";
 
 interface TabStaffPanelProps {
   activeStemId?: string;
@@ -96,6 +97,14 @@ export function TabStaffPanel({
             >
               Raw
             </button>
+            <button
+              aria-pressed={viewMode === "gh"}
+              className={viewMode === "gh" ? styles.viewToggleActive : styles.viewToggleButton}
+              onClick={() => setViewMode("gh")}
+              type="button"
+            >
+              GH
+            </button>
           </div>
           {activeStemId && <TrackCreationPanel onCreateTrack={onCreateTrack} />}
         </div>
@@ -151,6 +160,9 @@ export function TabStaffPanel({
       )}
       {selectedTrack && viewMode === "raw" && (
         <RawTabView duration={duration} track={selectedTrack} />
+      )}
+      {selectedTrack && viewMode === "gh" && (
+        <GuitarHeroView currentTime={currentTime} track={selectedTrack} />
       )}
     </section>
   );
