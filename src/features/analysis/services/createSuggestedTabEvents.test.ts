@@ -49,4 +49,38 @@ describe("createSuggestedTabEvents", () => {
       )
     ).toEqual([]);
   });
+
+  it("uses locked earlier positions as fingering context", () => {
+    const [event] = createSuggestedTabEvents(
+      [
+        {
+          confidence: 0.82,
+          durationSeconds: 0.5,
+          frequencyHz: 329.63,
+          pitch: "E4",
+          startSeconds: 2,
+        },
+      ],
+      standardGuitarTuning,
+      {
+        createId: () => "suggested-1",
+        lockedEvents: [
+          {
+            id: "locked-1",
+            startSeconds: 1,
+            durationSeconds: 0.5,
+            kind: "single",
+            texture: "mono",
+            detectedPitches: [],
+            chosenPositions: [{ stringNumber: 2, fret: 5, pitch: "E4" }],
+            candidates: [],
+            confidence: 1,
+            locked: true,
+          },
+        ],
+      }
+    );
+
+    expect(event.chosenPositions).toEqual([{ stringNumber: 2, fret: 5, pitch: "E4" }]);
+  });
 });

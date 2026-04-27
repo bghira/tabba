@@ -56,9 +56,14 @@ export function replaceSuggestedEventsInTrack(
   suggestedEvents: TabEvent[],
   updatedAt: Date
 ): TabbaProject {
-  return updateTrackEvents(project, trackId, updatedAt, (track) =>
-    sortEventsByStart([...track.events.filter((event) => event.locked), ...suggestedEvents])
-  );
+  return updateTrackEvents(project, trackId, updatedAt, (track) => {
+    const lockedEvents = track.events.filter((event) => event.locked);
+    const nonOverlappingSuggestions = suggestedEvents.filter(
+      (event) => !lockedEvents.some((lockedEvent) => eventsOverlap(event, lockedEvent))
+    );
+
+    return sortEventsByStart([...lockedEvents, ...nonOverlappingSuggestions]);
+  });
 }
 
 export function shiftSuggestedEventsInTrack(
@@ -149,4 +154,11 @@ function updateTrackEvents(
 
 function sortEventsByStart(events: TabEvent[]): TabEvent[] {
   return [...events].sort((left, right) => left.startSeconds - right.startSeconds);
+}
+
+function eventsOverlap(left: TabEvent, right: TabEvent): boolean {
+  return (
+    left.startSeconds < right.startSeconds + right.durationSeconds &&
+    right.startSeconds < left.startSeconds + left.durationSeconds
+  );
 }
