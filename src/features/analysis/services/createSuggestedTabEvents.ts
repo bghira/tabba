@@ -16,14 +16,28 @@ export function createSuggestedTabEvents(
   options: SuggestedEventOptions = {}
 ): TabEvent[] {
   const createId = options.createId ?? defaultCreateId;
-  const lockedEvents = options.lockedEvents ?? [];
+  const lockedEvents = sortEventsByStart(options.lockedEvents ?? []);
   const createdEvents: TabEvent[] = [];
+  let lockedEventIndex = 0;
+  let previousPosition: TabPosition | undefined;
+  let previousPositionStartSeconds = -Infinity;
 
   for (const note of [...notes].sort((left, right) => left.startSeconds - right.startSeconds)) {
-    const previousPosition = findPreviousPosition(note.startSeconds, [
-      ...lockedEvents,
-      ...createdEvents,
-    ]);
+    while (
+      lockedEventIndex < lockedEvents.length &&
+      lockedEvents[lockedEventIndex].startSeconds < note.startSeconds
+    ) {
+      const lockedEvent = lockedEvents[lockedEventIndex];
+      const lockedPosition = lockedEvent.chosenPositions[0];
+
+      if (lockedPosition && lockedEvent.startSeconds >= previousPositionStartSeconds) {
+        previousPosition = lockedPosition;
+        previousPositionStartSeconds = lockedEvent.startSeconds;
+      }
+
+      lockedEventIndex += 1;
+    }
+
     const candidates = createPositionCandidates(note.pitch, tuning, { previousPosition });
     const chosenPosition = candidates[0]?.positions[0];
 
@@ -49,17 +63,13 @@ export function createSuggestedTabEvents(
       confidence: note.confidence,
       locked: false,
     });
+    previousPosition = chosenPosition;
+    previousPositionStartSeconds = note.startSeconds;
   }
 
   return createdEvents;
 }
 
-function findPreviousPosition(
-  startSeconds: number,
-  events: TabEvent[]
-): TabPosition | undefined {
-  return events
-    .filter((event) => event.startSeconds < startSeconds && event.chosenPositions[0])
-    .sort((left, right) => right.startSeconds - left.startSeconds)[0]
-    ?.chosenPositions[0];
+function sortEventsByStart(events: TabEvent[]): TabEvent[] {
+  return [...events].sort((left, right) => left.startSeconds - right.startSeconds);
 }

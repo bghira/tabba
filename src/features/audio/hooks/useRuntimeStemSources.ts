@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Stem } from "../../project/types";
-import { createStemFromAudioFile } from "../services/createStemFromAudioFile";
-import { findMatchingStemForAudioFile } from "../services/matchStemSource";
+import { createRuntimeStemImports } from "../services/createRuntimeStemImports";
 import type { RuntimeStemSource } from "../types";
 
 interface UseRuntimeStemSourcesOptions {
@@ -17,10 +16,7 @@ export function useRuntimeStemSources({
 
   const importFiles = useCallback(
     (files: FileList | File[]) => {
-      const imported = Array.from(files).map((file) => {
-        const stem = findMatchingStemForAudioFile(file, existingStems) ?? createStemFromAudioFile(file);
-        return { stem, source: { stemId: stem.id, file } };
-      });
+      const imported = createRuntimeStemImports(files, existingStems);
 
       if (imported.length === 0) {
         return;
