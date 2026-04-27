@@ -11,7 +11,9 @@ describe("instrumentAnalysisOptions", () => {
     });
   });
 
-  it("keeps guitar on the default detector settings", () => {
-    expect(getInstrumentPitchOptions("guitar")).toEqual({});
+  it("covers the upper frets for guitar analysis", () => {
+    expect(getInstrumentPitchOptions("guitar")).toMatchObject({
+      maxFrequencyHz: 1400,
+    });
   });
 });

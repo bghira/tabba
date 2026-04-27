@@ -37,7 +37,7 @@ export function alignNotesToEnergyOnsets(
   const onsets = detectEnergyOnsets(samples, sampleRate, settings);
   let previousStartSeconds = -Infinity;
 
-  return [...notes].sort((left, right) => left.startSeconds - right.startSeconds).map((note) => {
+  return [...notes].sort((left, right) => left.startSeconds - right.startSeconds).flatMap((note) => {
     const onset = findNearestAvailableOnset(
       note.startSeconds,
       onsets,
@@ -49,8 +49,9 @@ export function alignNotesToEnergyOnsets(
       !onset ||
       onset.seconds < previousStartSeconds + settings.minNoteSeparationSeconds
     ) {
-      previousStartSeconds = note.startSeconds;
-      return note;
+      const splitNotes = splitNoteAtInnerOnsets(note, onsets, settings);
+      previousStartSeconds = splitNotes[splitNotes.length - 1]?.startSeconds ?? note.startSeconds;
+      return splitNotes;
     }
 
     const noteEndSeconds = note.startSeconds + note.durationSeconds;
@@ -60,8 +61,9 @@ export function alignNotesToEnergyOnsets(
       startSeconds: onset.seconds,
     };
 
-    previousStartSeconds = alignedNote.startSeconds;
-    return alignedNote;
+    const splitNotes = splitNoteAtInnerOnsets(alignedNote, onsets, settings);
+    previousStartSeconds = splitNotes[splitNotes.length - 1]?.startSeconds ?? alignedNote.startSeconds;
+    return splitNotes;
   });
 }
 
@@ -124,6 +126,34 @@ function findNearestAvailableOnset(
 
   // Fall back to nearest lookahead onset when no earlier onset exists.
   return candidates.sort((left, right) => left.seconds - right.seconds)[0];
+}
+
+function splitNoteAtInnerOnsets(
+  note: DetectedNote,
+  onsets: EnergyOnset[],
+  settings: Required<NoteOnsetAlignmentOptions>
+): DetectedNote[] {
+  const noteEndSeconds = note.startSeconds + note.durationSeconds;
+  const innerOnsets = onsets
+    .map((onset) => onset.seconds)
+    .filter(
+      (seconds) =>
+        seconds >= note.startSeconds + settings.minNoteSeparationSeconds &&
+        seconds <= noteEndSeconds - settings.minDurationSeconds
+    )
+    .sort((left, right) => left - right);
+
+  if (innerOnsets.length === 0) {
+    return [note];
+  }
+
+  const boundaries = [note.startSeconds, ...innerOnsets, noteEndSeconds];
+
+  return boundaries.slice(0, -1).map((startSeconds, index) => ({
+    ...note,
+    durationSeconds: Math.max(settings.minDurationSeconds, boundaries[index + 1] - startSeconds),
+    startSeconds,
+  }));
 }
 
 function isEnergyRise(

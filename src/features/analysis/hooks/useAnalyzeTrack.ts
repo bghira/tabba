@@ -30,6 +30,11 @@ export function useAnalyzeTrack({
         return;
       }
 
+      if (activeSource.stemId !== track.stemId) {
+        setProjectNotice("Select the stem attached to this track before analyzing.");
+        return;
+      }
+
       setProjectNotice("Analyzing selected stem...");
       decodeAudioFile(activeSource.file)
         .then((decoded) => {
@@ -40,7 +45,9 @@ export function useAnalyzeTrack({
             decoded.samples,
             decoded.sampleRate
           );
-          const events = createSuggestedTabEvents(notes, track.tuning);
+          const events = createSuggestedTabEvents(notes, track.tuning, {
+            lockedEvents: track.events.filter((event) => event.locked),
+          });
 
           const htmlAudioDurationSeconds = project.stems.find(
             (stem) => stem.id === track.stemId
@@ -69,6 +76,6 @@ export function useAnalyzeTrack({
           setProjectNotice(error instanceof Error ? error.message : "Analysis failed.");
         });
     },
-    [activeSource, project.tracks, setProject, setProjectNotice]
+    [activeSource, project.stems, project.tracks, setProject, setProjectNotice]
   );
 }

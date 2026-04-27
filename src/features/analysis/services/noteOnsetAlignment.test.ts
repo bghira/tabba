@@ -75,6 +75,47 @@ describe("noteOnsetAlignment", () => {
     expect(alignedNotes.map((alignedNote) => alignedNote.startSeconds)).toEqual([0.1, 0.36]);
   });
 
+  it("splits a sustained same-pitch note at repeated energy onsets", () => {
+    const sampleRate = 1_000;
+    const samples = new Float32Array(1_000);
+
+    for (let index = 100; index < 250; index += 1) {
+      samples[index] = 0.04;
+    }
+    for (let index = 250; index < 500; index += 1) {
+      samples[index] = 0.08;
+    }
+
+    const alignedNotes = alignNotesToEnergyOnsets(
+      [
+        {
+          confidence: 0.9,
+          durationSeconds: 0.45,
+          frequencyHz: 55,
+          pitch: "A1",
+          startSeconds: 0.12,
+        },
+      ],
+      samples,
+      sampleRate,
+      {
+        hopSize: 20,
+        maxLookbackSeconds: 0.1,
+        minDurationSeconds: 0.05,
+        minNoteSeparationSeconds: 0.05,
+        onsetRiseRatio: 1.2,
+        rmsThreshold: 0.01,
+        windowSize: 20,
+      }
+    );
+
+    expect(alignedNotes.map((alignedNote) => alignedNote.startSeconds)).toEqual([0.1, 0.24]);
+    expect(alignedNotes.map((alignedNote) => alignedNote.durationSeconds)).toEqual([
+      expect.closeTo(0.14),
+      expect.closeTo(0.33),
+    ]);
+  });
+
   it("can move a pitch-window start forward to the actual onset", () => {
     const sampleRate = 1_000;
     const samples = new Float32Array(1_000);

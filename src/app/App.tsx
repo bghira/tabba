@@ -61,6 +61,7 @@ export function App() {
   }, []);
 
   const { clearSources, importFiles, sources } = useRuntimeStemSources({
+    existingStems: project.stems,
     onStemsCreated: handleStemsCreated,
   });
 

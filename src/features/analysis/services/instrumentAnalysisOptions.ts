@@ -15,5 +15,7 @@ export function getInstrumentPitchOptions(instrument: InstrumentKind): PitchDete
     };
   }
 
-  return {};
+  return {
+    maxFrequencyHz: 1400,
+  };
 }
